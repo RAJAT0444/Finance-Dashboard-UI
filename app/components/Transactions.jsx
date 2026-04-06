@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 /**
- * Transactions Component
+ * Transactions Component - Responsive Version
  * Displays a list of financial transactions with category, date, amount, and type.
  * For admin users, includes Edit and Delete buttons and an inline edit form.
  *
@@ -11,7 +11,6 @@ import { useState } from "react";
  * @param {string} role - User role ('admin' or 'viewer')
  * @param {Function} onUpdateTransaction - Callback to update a transaction (admin only)
  * @param {Function} onDeleteTransaction - Callback to delete a transaction (admin only)
- * @param {Function} onAddTransaction - Optional callback to scroll to add form (already exists)
  */
 export default function Transactions({
   transactions = [],
@@ -19,9 +18,7 @@ export default function Transactions({
   onUpdateTransaction,
   onDeleteTransaction,
 }) {
-  // State to track which transaction is being edited (null if none)
   const [editingId, setEditingId] = useState(null);
-  // Form data for the transaction being edited
   const [editForm, setEditForm] = useState({
     amount: "",
     category: "",
@@ -29,9 +26,6 @@ export default function Transactions({
     date: "",
   });
 
-  /**
-   * scrollToAddForm - Smoothly scrolls to the "Add Transaction" form
-   */
   const scrollToAddForm = () => {
     const addForm = document.getElementById("add-transaction-form");
     if (addForm) {
@@ -39,10 +33,6 @@ export default function Transactions({
     }
   };
 
-  /**
-   * Start editing a transaction: populate the edit form and set editingId
-   * @param {Object} transaction - The transaction to edit
-   */
   const startEdit = (transaction) => {
     setEditingId(transaction.id);
     setEditForm({
@@ -53,17 +43,11 @@ export default function Transactions({
     });
   };
 
-  /**
-   * Cancel editing: clear editingId and reset edit form
-   */
   const cancelEdit = () => {
     setEditingId(null);
     setEditForm({ amount: "", category: "", type: "expense", date: "" });
   };
 
-  /**
-   * Save the edited transaction and call the parent update handler
-   */
   const saveEdit = () => {
     if (!editForm.amount || !editForm.category) {
       alert("Please fill in amount and category");
@@ -80,10 +64,6 @@ export default function Transactions({
     cancelEdit();
   };
 
-  /**
-   * Delete a transaction after confirmation
-   * @param {number} id - Transaction ID to delete
-   */
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this transaction?")) {
       onDeleteTransaction(id);
@@ -92,27 +72,27 @@ export default function Transactions({
 
   return (
     <div className="w-full">
-      {/* Header section: Title and optional admin button */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">Transactions</h2>
-        {/* Only show the "Add Transaction" button if user has admin privileges */}
+      {/* Header section with responsive flex */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+        <h2 className="text-base sm:text-lg font-semibold text-slate-800">
+          Transaction History
+        </h2>
         {role === "admin" && (
           <button
             onClick={scrollToAddForm}
-            className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 hover:shadow-md active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="bg-linear-to-r from-blue-600 to-indigo-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 transform hover:scale-105 hover:shadow-md active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto"
           >
             + Add Transaction
           </button>
         )}
       </div>
 
-      {/* Transactions list */}
+      {/* Transactions list - responsive spacing */}
       <div className="space-y-3">
         {transactions.length === 0 ? (
-          /* Empty state */
-          <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="text-center py-8 sm:py-12 bg-white/50 rounded-xl border border-slate-100">
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -124,18 +104,20 @@ export default function Transactions({
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <p className="text-gray-500 mt-2">No transactions found</p>
+            <p className="text-slate-500 mt-2 text-sm sm:text-base">
+              No transactions found
+            </p>
           </div>
         ) : (
           transactions.map((t) => (
             <div
               key={t.id}
-              className="flex justify-between items-start p-4 bg-white rounded-xl border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md group"
+              className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-100 shadow-sm transition-all duration-200 hover:shadow-md group"
             >
               {editingId === t.id ? (
-                /* --------------------- EDIT MODE --------------------- */
+                /* ---------- EDIT MODE (fully responsive) ---------- */
                 <div className="w-full space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-3">
                     <input
                       type="number"
                       placeholder="Amount"
@@ -143,7 +125,7 @@ export default function Transactions({
                       onChange={(e) =>
                         setEditForm({ ...editForm, amount: e.target.value })
                       }
-                      className="border border-gray-200 rounded-lg p-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="border border-slate-200 rounded-lg p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                     />
                     <input
                       type="text"
@@ -152,14 +134,14 @@ export default function Transactions({
                       onChange={(e) =>
                         setEditForm({ ...editForm, category: e.target.value })
                       }
-                      className="border border-gray-200 rounded-lg p-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="border border-slate-200 rounded-lg p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                     />
                     <select
                       value={editForm.type}
                       onChange={(e) =>
                         setEditForm({ ...editForm, type: e.target.value })
                       }
-                      className="border border-gray-200 rounded-lg p-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="border border-slate-200 rounded-lg p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                     >
                       <option value="expense">💸 Expense</option>
                       <option value="income">💰 Income</option>
@@ -170,35 +152,35 @@ export default function Transactions({
                       onChange={(e) =>
                         setEditForm({ ...editForm, date: e.target.value })
                       }
-                      className="border border-gray-200 rounded-lg p-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="border border-slate-200 rounded-lg p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                     />
                   </div>
                   <div className="flex gap-2 justify-end">
                     <button
                       onClick={saveEdit}
-                      className="bg-green-600 text-white px-4 py-1 rounded-lg text-sm hover:bg-green-700 transition"
+                      className="bg-emerald-600 text-white px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-emerald-700 transition font-medium"
                     >
                       Save
                     </button>
                     <button
                       onClick={cancelEdit}
-                      className="bg-gray-300 text-gray-700 px-4 py-1 rounded-lg text-sm hover:bg-gray-400 transition"
+                      className="bg-slate-200 text-slate-700 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-slate-300 transition font-medium"
                     >
                       Cancel
                     </button>
                   </div>
                 </div>
               ) : (
-                /* --------------------- VIEW MODE --------------------- */
+                /* ---------- VIEW MODE (responsive layout) ---------- */
                 <>
-                  {/* Left side: category, date, calendar icon */}
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800 group-hover:text-gray-900 transition-colors">
+                  {/* Left side - category & date */}
+                  <div className="flex-1 w-full sm:w-auto mb-2 sm:mb-0">
+                    <p className="font-medium text-slate-800 group-hover:text-slate-900 transition-colors text-sm sm:text-base">
                       {t.category}
                     </p>
-                    <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1">
+                    <p className="text-xs sm:text-sm text-slate-500 mt-0.5 flex items-center gap-1">
                       <svg
-                        className="w-3.5 h-3.5"
+                        className="w-3 h-3 sm:w-3.5 sm:h-3.5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -214,31 +196,34 @@ export default function Transactions({
                     </p>
                   </div>
 
-                  {/* Right side: amount, type, and admin actions */}
-                  <div className="text-right">
-                    <p
-                      className={`font-semibold ${
-                        t.type === "income" ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      ₹{t.amount.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-500 capitalize mt-0.5">
-                      {t.type}
-                    </p>
+                  {/* Right side - amount, type, and actions */}
+                  <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto gap-2 sm:gap-0">
+                    <div className="text-left sm:text-right">
+                      <p
+                        className={`font-semibold text-sm sm:text-base ${
+                          t.type === "income" ? "text-emerald-600" : "text-rose-600"
+                        }`}
+                      >
+                        ₹{t.amount.toLocaleString()}
+                      </p>
+                      <p className="text-xs sm:text-sm text-slate-500 capitalize mt-0.5">
+                        {t.type}
+                      </p>
+                    </div>
 
-                    {/* Admin actions: Edit & Delete buttons */}
                     {role === "admin" && (
-                      <div className="flex gap-2 justify-end mt-2">
+                      <div className="flex gap-3 sm:gap-2 justify-end mt-1 sm:mt-2">
                         <button
                           onClick={() => startEdit(t)}
-                          className="text-blue-600 hover:text-blue-800 text-xs font-medium transition"
+                          className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium transition px-2 py-1 rounded-md hover:bg-blue-50"
+                          aria-label="Edit transaction"
                         >
                           ✏️ Edit
                         </button>
                         <button
                           onClick={() => handleDelete(t.id)}
-                          className="text-red-600 hover:text-red-800 text-xs font-medium transition"
+                          className="text-rose-600 hover:text-rose-800 text-xs sm:text-sm font-medium transition px-2 py-1 rounded-md hover:bg-rose-50"
+                          aria-label="Delete transaction"
                         >
                           🗑️ Delete
                         </button>

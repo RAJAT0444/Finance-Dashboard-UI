@@ -56,3 +56,25 @@ body {
 .animate-slideUp {
   animation: slideUp 0.4s ease-out forwards;
 }
+
+
+@keyframes pulse-once {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+  100% { transform: scale(1); }
+}
+
+.animate-pulse-once {
+  animation: pulse-once 0.4s ease-in-out;
+}
+
+
+
+@keyframes pulse-once {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.01); opacity: 0.95; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-pulse-once {
+  animation: pulse-once 0.3s ease-in-out;
+}
