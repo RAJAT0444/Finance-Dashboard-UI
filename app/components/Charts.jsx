@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -12,26 +12,28 @@ import {
   Pie,
   Cell,
   Legend,
-  Area,
-  AreaChart,
   CartesianGrid,
 } from "recharts";
 
 // Modern color palette for pie chart
 const PIE_COLORS = [
-  "#3b82f6", // blue
-  "#10b981", // emerald
-  "#f59e0b", // amber
-  "#ef4444", // red
-  "#8b5cf6", // violet
-  "#ec4899", // pink
-  "#06b6d4", // cyan
-  "#f97316", // orange
-  "#6366f1", // indigo
-  "#84cc16", // lime
+  "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
+  "#ec4899", "#06b6d4", "#f97316", "#6366f1", "#84cc16",
 ];
 
-// Custom tooltip formatter for Indian currency
+// Helper: Format date from YYYY-MM-DD to DD MMM YYYY
+const formatDate = (dateStr) => {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
+
+// Indian currency formatter
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -41,14 +43,69 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-// Custom tooltip component
-const CustomTooltip = ({ active, payload, label }) => {
+// Professional Custom Tooltip for AreaChart (shows formatted date, income, expense)
+const CustomAreaTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
+    const incomeItem = payload.find(p => p.dataKey === 'income');
+    const expenseItem = payload.find(p => p.dataKey === 'expense');
+    const incomeValue = incomeItem?.value || 0;
+    const expenseValue = expenseItem?.value || 0;
+    const netValue = incomeValue - expenseValue;
+    const formattedDate = formatDate(label);
+
+    return (
+      <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-xl p-3 sm:p-4 border border-slate-100 min-w-40 sm:min-w-50">
+        <p className="text-xs sm:text-sm font-semibold text-slate-700 border-b border-slate-100 pb-1 mb-2">
+          📅 {formattedDate}
+        </p>
+        <div className="space-y-1.5">
+          {incomeValue > 0 && (
+            <div className="flex justify-between items-center gap-3">
+              <span className="text-xs sm:text-sm text-emerald-600 font-medium flex items-center gap-1">
+                <span>🟢</span> Income
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-emerald-700">
+                {formatCurrency(incomeValue)}
+              </span>
+            </div>
+          )}
+          {expenseValue > 0 && (
+            <div className="flex justify-between items-center gap-3">
+              <span className="text-xs sm:text-sm text-rose-600 font-medium flex items-center gap-1">
+                <span>🔴</span> Expense
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-rose-700">
+                {formatCurrency(expenseValue)}
+              </span>
+            </div>
+          )}
+          <div className="border-t border-slate-100 pt-1.5 mt-1">
+            <div className="flex justify-between items-center gap-3">
+              <span className="text-xs sm:text-sm text-slate-500 font-medium">Net Flow</span>
+              <span className={`text-xs sm:text-sm font-bold ${netValue >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {formatCurrency(Math.abs(netValue))} {netValue >= 0 ? '↑' : '↓'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Simple tooltip for PieChart
+const CustomPieTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
     return (
       <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-3 border border-slate-100">
-        <p className="text-xs sm:text-sm font-medium text-slate-700">{label}</p>
+        <p className="text-xs sm:text-sm font-medium text-slate-700">{data.name}</p>
         <p className="text-sm sm:text-base font-bold text-slate-800">
-          {formatCurrency(payload[0].value)}
+          {formatCurrency(data.value)}
+        </p>
+        <p className="text-xs text-slate-500 mt-1">
+          {((data.value / payload[0].total) * 100).toFixed(1)}% of total
         </p>
       </div>
     );
@@ -57,24 +114,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Charts({ transactions = [] }) {
-  // Prepare line chart data (sorted by date)
-  const lineData = useMemo(() => {
-    const grouped = {};
-    transactions.forEach((t) => {
-      const date = t.date;
-      if (!grouped[date]) {
-        grouped[date] = { date, amount: 0 };
-      }
-      if (t.type === 'income') {
-        grouped[date].amount += t.amount;
-      } else {
-        grouped[date].amount -= t.amount; // net flow: positive income, negative expense
-      }
-    });
-    return Object.values(grouped).sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [transactions]);
-
-  // Prepare area chart data for income vs expense (stacked)
+  // Prepare area chart data (income vs expense grouped by date)
   const areaData = useMemo(() => {
     const grouped = {};
     transactions.forEach((t) => {
@@ -119,10 +159,10 @@ export default function Charts({ transactions = [] }) {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Net Cash Flow (Line/Area Chart) */}
+      {/* Income vs Expense Area Chart */}
       <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/50 shadow-sm">
         <h3 className="text-sm sm:text-base font-semibold text-slate-700 mb-2 sm:mb-3 flex items-center gap-2">
-          <span>📈</span> Net Cash Flow Over Time
+          <span>📈</span> Income vs Expense Over Time
         </h3>
         <div className="w-full h-64 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
@@ -145,13 +185,14 @@ export default function Charts({ transactions = [] }) {
                 angle={-30}
                 textAnchor="end"
                 height={50}
+                tickFormatter={(dateStr) => formatDate(dateStr)}
               />
               <YAxis 
                 tick={{ fontSize: 10, fill: '#64748b' }}
                 tickLine={false}
                 tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomAreaTooltip />} />
               <Legend 
                 wrapperStyle={{ fontSize: '12px' }}
                 iconType="circle"
@@ -179,7 +220,7 @@ export default function Charts({ transactions = [] }) {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-xs text-slate-400 text-center mt-2">Income (green) vs Expense (red) over time</p>
+        <p className="text-xs text-slate-400 text-center mt-2">Hover over chart to see income (green) and expense (red) details</p>
       </div>
 
       {/* Two-column layout for pie and summary */}
@@ -219,7 +260,7 @@ export default function Charts({ transactions = [] }) {
                         />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => formatCurrency(value)} />
+                    <Tooltip content={<CustomPieTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
